@@ -14,7 +14,7 @@ export function PageHeader() {
   return (
     <div className='flex items-center justify-between gap-10 px-4 pt-2 pb-6 lg:gap-20'>
       <PageHeaderFirstSection hidden={showFullWidthSearch} />
-      <form className={`grow gap-4 ${showFullWidthSearch ? 'flex' : 'hidden md:flex'}`}>
+      <form action='/search' className={`grow gap-4 ${showFullWidthSearch ? 'flex' : 'hidden md:flex'}`}>
         {showFullWidthSearch && (
           <Button
             onClick={() => setShowFullWidthSearch(!showFullWidthSearch)}
@@ -29,11 +29,12 @@ export function PageHeader() {
         <div className={`flex grow ${!showFullWidthSearch && 'max-w-[600px]'}`}>
           <input
             type='search'
+            name='q'
             placeholder='Search'
             className='border-foreground shadow-foreground/20 dark:focus:border-foreground w-full rounded-l-full border px-4 py-1 text-sm shadow-inner outline-none focus:border-blue-500'
           />
           <Button
-            type='button'
+            type='submit'
             className='border-foreground shrink-0 rounded-l-none rounded-r-full border border-l-0 px-10 py-2'
           >
             <Search />

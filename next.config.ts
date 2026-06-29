@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: __dirname
+  },
   images: {
     remotePatterns: [
       {
@@ -16,7 +19,11 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/vi/**',
         search: ''
-      }
+      },
+      { protocol: 'https', hostname: 'drive.google.com' },
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
+      { protocol: 'https', hostname: '*.b-cdn.net' },
+      { protocol: 'https', hostname: '*.cloudflarestream.com' }
     ]
   }
 }

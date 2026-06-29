@@ -1,7 +1,8 @@
+'use client'
+
 import { Button } from '@/components/ui/button'
 import { useSidebarContext } from '@/contexts/sidebar-context'
-import { playlists } from '@/data/playlists'
-import { subscriptions } from '@/data/subscriptions'
+import type { Channel, Playlist } from '@/lib/queries/catalog'
 import {
   ChevronDown,
   ChevronUp,
@@ -10,6 +11,7 @@ import {
   Film,
   Flame,
   Gamepad2,
+  GraduationCap,
   History,
   Home,
   Library,
@@ -30,7 +32,13 @@ import React, { Children, ElementType, useState } from 'react'
 import { PageHeaderFirstSection } from './page-header'
 import { Separator } from './ui/separator'
 
-export function Sidebar() {
+export function Sidebar({
+  playlists = [],
+  subscriptions = []
+}: {
+  playlists?: Playlist[]
+  subscriptions?: Channel[]
+}) {
   const { isLargeOpen, isSmallOpen, close } = useSidebarContext()
 
   return (
@@ -52,6 +60,7 @@ export function Sidebar() {
         </div>
         <LargeSidebarSection>
           <LargeSidebarItem isActive IconOrImgUrl={Home} href='/' title='Home' />
+          <LargeSidebarItem IconOrImgUrl={GraduationCap} href='/learn' title='Học' />
           <LargeSidebarItem IconOrImgUrl={Clapperboard} href='/subscriptions' title='Subscriptions' />
         </LargeSidebarSection>
         <Separator className='my-1' />
@@ -64,7 +73,7 @@ export function Sidebar() {
             <LargeSidebarItem
               key={playlist.id}
               IconOrImgUrl={PlaySquare}
-              href={`/playlist?list=${playlist.id}`}
+              href={`/playlist?list=${playlist.slug}`}
               title={playlist.name}
             />
           ))}
@@ -74,9 +83,9 @@ export function Sidebar() {
           {subscriptions.map((subscription) => (
             <LargeSidebarItem
               key={subscription.id}
-              IconOrImgUrl={subscription.imgUrl}
-              href={`/playlist?list=${subscription.id}`}
-              title={subscription.channelName}
+              IconOrImgUrl={subscription.avatarUrl ?? Clapperboard}
+              href={`/channel/${subscription.slug}`}
+              title={subscription.name}
             />
           ))}
         </LargeSidebarSection>
