@@ -19,6 +19,7 @@ export type VideoDetail = VideoCard & {
   playbackUrl: string | null
   categoryId: string | null
   channelId: string | null
+  category: { slug: string; name: string } | null
   status: string
 }
 
@@ -38,12 +39,14 @@ type Row = {
   channel_id: string | null
   status: string
   channel: { slug: string; name: string; avatar_url: string | null } | null
+  category: { slug: string; name: string } | null
 }
 
 const SELECT = `
   id, title, description, views, duration, published_at,
   provider, source_id, source_url, playback_url, thumbnail_url, category_id, channel_id, status,
-  channel:vt_channels(slug, name, avatar_url)
+  channel:vt_channels(slug, name, avatar_url),
+  category:vt_categories(slug, name)
 `
 
 function toCard(r: Row): VideoCard {
@@ -73,6 +76,7 @@ function toDetail(r: Row): VideoDetail {
     playbackUrl: r.playback_url,
     categoryId: r.category_id,
     channelId: r.channel_id,
+    category: r.category ? { slug: r.category.slug, name: r.category.name } : null,
     status: r.status
   }
 }
@@ -101,18 +105,63 @@ export async function getVideoById(id: string): Promise<VideoDetail | null> {
   return data ? toDetail(data) : null
 }
 
-/** Video liên quan (cùng kênh hoặc mới nhất), loại trừ video hiện tại. */
-export async function getRelatedVideos(excludeId: string, limit = 12): Promise<VideoCard[]> {
+/**
+ * Video liên quan: ưu tiên cùng danh mục hoặc cùng kênh, rồi lấp đầy bằng
+ * video mới nhất còn lại. Loại trừ video hiện tại.
+ */
+export async function getRelatedVideos(
+  excludeId: string,
+  opts: { categoryId?: string | null; channelId?: string | null } = {},
+  limit = 12
+): Promise<VideoCard[]> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from('vt_videos')
-    .select(SELECT)
-    .eq('status', 'published')
-    .neq('id', excludeId)
-    .order('published_at', { ascending: false })
-    .limit(limit)
-    .returns<Row[]>()
-  return (data ?? []).map(toCard)
+  const { categoryId, channelId } = opts
+
+  // Điều kiện ưu tiên: cùng danh mục hoặc cùng kênh (chỉ ghép cái non-null).
+  const orFilters = [
+    categoryId ? `category_id.eq.${categoryId}` : null,
+    channelId ? `channel_id.eq.${channelId}` : null
+  ].filter((f): f is string => f !== null)
+
+  const picked: Row[] = []
+  const seen = new Set<string>([excludeId])
+
+  if (orFilters.length > 0) {
+    const { data } = await supabase
+      .from('vt_videos')
+      .select(SELECT)
+      .eq('status', 'published')
+      .neq('id', excludeId)
+      .or(orFilters.join(','))
+      .order('published_at', { ascending: false })
+      .limit(limit)
+      .returns<Row[]>()
+    for (const r of data ?? []) {
+      if (seen.has(r.id)) continue
+      seen.add(r.id)
+      picked.push(r)
+    }
+  }
+
+  // Lấp đầy phần còn thiếu bằng video mới nhất khác.
+  if (picked.length < limit) {
+    const { data } = await supabase
+      .from('vt_videos')
+      .select(SELECT)
+      .eq('status', 'published')
+      .neq('id', excludeId)
+      .order('published_at', { ascending: false })
+      .limit(limit)
+      .returns<Row[]>()
+    for (const r of data ?? []) {
+      if (picked.length >= limit) break
+      if (seen.has(r.id)) continue
+      seen.add(r.id)
+      picked.push(r)
+    }
+  }
+
+  return picked.slice(0, limit).map(toCard)
 }
 
 export async function searchVideos(q: string): Promise<VideoCard[]> {

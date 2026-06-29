@@ -49,6 +49,20 @@ export async function getLessonsForAdmin(): Promise<(LessonCard & { status: stri
   return data ?? []
 }
 
+export type LinkedLesson = { slug: string; title: string; difficulty: string }
+
+/** Bài học (đã publish) gắn với một video — cầu nối Video → Học. */
+export async function getLessonByVideoId(videoId: string): Promise<LinkedLesson | null> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('vt_lessons')
+    .select('slug, title, difficulty')
+    .eq('video_id', videoId)
+    .eq('status', 'published')
+    .maybeSingle<LinkedLesson>()
+  return data ?? null
+}
+
 export async function getLessonBySlug(slug: string): Promise<LessonDetail | null> {
   const supabase = await createClient()
   const { data: lesson } = await supabase

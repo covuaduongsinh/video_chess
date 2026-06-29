@@ -1,8 +1,12 @@
 import { Sidebar } from '@/components/sidebar'
-import { getPlaylists, getSubscriptionChannels } from '@/lib/queries/catalog'
+import { getCategories, getPlaylists, getSubscriptionChannels } from '@/lib/queries/catalog'
 
-/** Server wrapper: fetch playlists + subscriptions rồi truyền vào Sidebar (client). */
+/** Server wrapper: fetch playlists + subscriptions + danh mục rồi truyền vào Sidebar (client). */
 export async function AppSidebar() {
-  const [playlists, subscriptions] = await Promise.all([getPlaylists(), getSubscriptionChannels()])
-  return <Sidebar playlists={playlists} subscriptions={subscriptions} />
+  const [playlists, subscriptions, categories] = await Promise.all([
+    getPlaylists(),
+    getSubscriptionChannels(),
+    getCategories()
+  ])
+  return <Sidebar playlists={playlists} subscriptions={subscriptions} categories={categories} />
 }

@@ -2,29 +2,27 @@
 
 import { Button } from '@/components/ui/button'
 import { useSidebarContext } from '@/contexts/sidebar-context'
-import type { Channel, Playlist } from '@/lib/queries/catalog'
+import type { Category, Channel, Playlist } from '@/lib/queries/catalog'
 import {
+  BookOpen,
+  Brain,
+  Castle,
   ChevronDown,
   ChevronUp,
   Clapperboard,
   Clock,
-  Film,
-  Flame,
-  Gamepad2,
+  Crown,
   GraduationCap,
   History,
   Home,
   Library,
-  Lightbulb,
-  Music2,
-  Newspaper,
   PlaySquare,
-  Podcast,
-  Radio,
-  Repeat,
-  Shirt,
-  ShoppingBag,
-  Trophy
+  Puzzle,
+  Swords,
+  Target,
+  Trophy,
+  Users,
+  type LucideIcon
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -32,12 +30,17 @@ import React, { Children, ElementType, useState } from 'react'
 import { PageHeaderFirstSection } from './page-header'
 import { Separator } from './ui/separator'
 
+/** Bộ icon cờ vua xoay vòng cho danh mục (danh mục do admin tạo nên không cố định). */
+const CATEGORY_ICONS: LucideIcon[] = [Swords, Puzzle, Crown, Castle, Target, BookOpen, Brain, Trophy]
+
 export function Sidebar({
   playlists = [],
-  subscriptions = []
+  subscriptions = [],
+  categories = []
 }: {
   playlists?: Playlist[]
   subscriptions?: Channel[]
+  categories?: Category[]
 }) {
   const { isLargeOpen, isSmallOpen, close } = useSidebarContext()
 
@@ -46,10 +49,10 @@ export function Sidebar({
       <aside
         className={`scrollbar-hidden sticky top-0 ml-1 flex flex-col overflow-y-auto ${isLargeOpen ? 'lg:hidden' : 'lg:flex'}`}
       >
-        <SmallSidebarItem IconOrImgUrl={Home} href='/' title='Home' />
-        <SmallSidebarItem IconOrImgUrl={Repeat} href='/shorts' title='Shorts' />
-        <SmallSidebarItem IconOrImgUrl={Clapperboard} href='/subscriptions' title='Subscriptions' />
-        <SmallSidebarItem IconOrImgUrl={Library} href='/library' title='Library' />
+        <SmallSidebarItem IconOrImgUrl={Home} href='/' title='Trang chủ' />
+        <SmallSidebarItem IconOrImgUrl={GraduationCap} href='/learn' title='Học' />
+        <SmallSidebarItem comingSoon IconOrImgUrl={Library} href='#' title='Thư viện' />
+        <SmallSidebarItem comingSoon IconOrImgUrl={History} href='#' title='Lịch sử' />
       </aside>
       {isSmallOpen && <div className='fixed inset-0 z-999 bg-black/50 lg:hidden' onClick={close} />}
       <aside
@@ -59,49 +62,65 @@ export function Sidebar({
           <PageHeaderFirstSection />
         </div>
         <LargeSidebarSection>
-          <LargeSidebarItem isActive IconOrImgUrl={Home} href='/' title='Home' />
-          <LargeSidebarItem IconOrImgUrl={GraduationCap} href='/learn' title='Học' />
-          <LargeSidebarItem IconOrImgUrl={Clapperboard} href='/subscriptions' title='Subscriptions' />
+          <LargeSidebarItem isActive IconOrImgUrl={Home} href='/' title='Trang chủ' />
+          <LargeSidebarItem IconOrImgUrl={GraduationCap} href='/learn' title='Học cờ' />
         </LargeSidebarSection>
+
+        {categories.length > 0 && (
+          <>
+            <Separator className='my-1' />
+            <LargeSidebarSection title='Thể loại' visibleItemCount={8}>
+              {categories.map((category, i) => (
+                <LargeSidebarItem
+                  key={category.id}
+                  IconOrImgUrl={CATEGORY_ICONS[i % CATEGORY_ICONS.length]}
+                  href={`/?category=${category.slug}`}
+                  title={category.name}
+                />
+              ))}
+            </LargeSidebarSection>
+          </>
+        )}
+
+        {playlists.length > 0 && (
+          <>
+            <Separator className='my-1' />
+            <LargeSidebarSection title='Playlist' visibleItemCount={5}>
+              {playlists.map((playlist) => (
+                <LargeSidebarItem
+                  key={playlist.id}
+                  IconOrImgUrl={PlaySquare}
+                  href={`/playlist?list=${playlist.slug}`}
+                  title={playlist.name}
+                />
+              ))}
+            </LargeSidebarSection>
+          </>
+        )}
+
+        {subscriptions.length > 0 && (
+          <>
+            <Separator className='my-1' />
+            <LargeSidebarSection title='Kênh' visibleItemCount={5}>
+              {subscriptions.map((subscription) => (
+                <LargeSidebarItem
+                  key={subscription.id}
+                  IconOrImgUrl={subscription.avatarUrl ?? Clapperboard}
+                  href={`/channel/${subscription.slug}`}
+                  title={subscription.name}
+                />
+              ))}
+            </LargeSidebarSection>
+          </>
+        )}
+
         <Separator className='my-1' />
-        <LargeSidebarSection visibleItemCount={5}>
-          <LargeSidebarItem IconOrImgUrl={Library} href='/library' title='Library' />
-          <LargeSidebarItem IconOrImgUrl={History} href='/history' title='History' />
-          <LargeSidebarItem IconOrImgUrl={PlaySquare} href='/your-videos' title='Your Videos' />
-          <LargeSidebarItem IconOrImgUrl={Clock} href='/playlist?list=WL' title='Watch Later' />
-          {playlists.map((playlist) => (
-            <LargeSidebarItem
-              key={playlist.id}
-              IconOrImgUrl={PlaySquare}
-              href={`/playlist?list=${playlist.slug}`}
-              title={playlist.name}
-            />
-          ))}
-        </LargeSidebarSection>
-        <Separator className='my-1' />
-        <LargeSidebarSection title='Subscriptions' visibleItemCount={3}>
-          {subscriptions.map((subscription) => (
-            <LargeSidebarItem
-              key={subscription.id}
-              IconOrImgUrl={subscription.avatarUrl ?? Clapperboard}
-              href={`/channel/${subscription.slug}`}
-              title={subscription.name}
-            />
-          ))}
-        </LargeSidebarSection>
-        <Separator className='my-1' />
-        <LargeSidebarSection title='Explore'>
-          <LargeSidebarItem IconOrImgUrl={Flame} title='Trending' href='/trending' />
-          <LargeSidebarItem IconOrImgUrl={ShoppingBag} title='Shopping' href='/shopping' />
-          <LargeSidebarItem IconOrImgUrl={Music2} title='Music' href='/music' />
-          <LargeSidebarItem IconOrImgUrl={Film} title='Movies & TV' href='/movies-tv' />
-          <LargeSidebarItem IconOrImgUrl={Radio} title='Live' href='/live' />
-          <LargeSidebarItem IconOrImgUrl={Gamepad2} title='Gaming' href='/gaming' />
-          <LargeSidebarItem IconOrImgUrl={Newspaper} title='News' href='/news' />
-          <LargeSidebarItem IconOrImgUrl={Trophy} title='Sports' href='/sports' />
-          <LargeSidebarItem IconOrImgUrl={Lightbulb} title='Learning' href='/learning' />
-          <LargeSidebarItem IconOrImgUrl={Shirt} title='Fashion & Beauty' href='/fashion-beauty' />
-          <LargeSidebarItem IconOrImgUrl={Podcast} title='Podcasts' href='/podcasts' />
+        <LargeSidebarSection title='Thư viện của bạn'>
+          <LargeSidebarItem comingSoon IconOrImgUrl={Library} href='#' title='Thư viện' />
+          <LargeSidebarItem comingSoon IconOrImgUrl={History} href='#' title='Lịch sử' />
+          <LargeSidebarItem comingSoon IconOrImgUrl={PlaySquare} href='#' title='Video của bạn' />
+          <LargeSidebarItem comingSoon IconOrImgUrl={Clock} href='#' title='Xem sau' />
+          <LargeSidebarItem comingSoon IconOrImgUrl={Users} href='#' title='Kênh đăng ký' />
         </LargeSidebarSection>
       </aside>
     </>
@@ -112,18 +131,37 @@ type SmallSidebarItemProps = {
   IconOrImgUrl: ElementType | string
   href: string
   title: string
+  comingSoon?: boolean
 }
 
-function SmallSidebarItem({ IconOrImgUrl, href, title }: SmallSidebarItemProps) {
+function SmallSidebarItem({ IconOrImgUrl, href, title, comingSoon = false }: SmallSidebarItemProps) {
+  const inner = (
+    <>
+      {typeof IconOrImgUrl === 'string' ? (
+        <Image src={IconOrImgUrl} width={32} height={32} alt={title} className='rounded-full' />
+      ) : (
+        <IconOrImgUrl className='h-10 w-10' />
+      )}
+      <div className='text-xs'>{title}</div>
+    </>
+  )
+
+  if (comingSoon) {
+    return (
+      <div
+        aria-disabled='true'
+        title='Sắp ra mắt'
+        className='mb-2 flex cursor-default flex-col items-center justify-center rounded-sm px-4 py-8 opacity-50'
+      >
+        {inner}
+      </div>
+    )
+  }
+
   return (
     <Button asChild variant='ghost' className='mb-2 rounded-sm px-4 py-8'>
       <Link href={href} className='flex flex-col items-center justify-center'>
-        {typeof IconOrImgUrl === 'string' ? (
-          <Image src={IconOrImgUrl} width={32} height={32} alt={title} className='rounded-full' />
-        ) : (
-          <IconOrImgUrl className='h-10 w-10' />
-        )}
-        <div className='text-xs'>{title}</div>
+        {inner}
       </Link>
     </Button>
   )
@@ -153,7 +191,7 @@ function LargeSidebarSection({
       {showExpandButton && (
         <Button variant='ghost' className='rounded-sm p-2' onClick={() => setIsExpended(!isExpended)}>
           <ButtonIcon className='h-6 w-6' />
-          <div>{isExpended ? 'Show less' : 'Show more'}</div>
+          <div>{isExpended ? 'Thu gọn' : 'Hiện thêm'}</div>
         </Button>
       )}
     </div>
@@ -165,9 +203,39 @@ type LargeSidebarItemProps = {
   IconOrImgUrl: ElementType | string
   href: string
   title: string
+  comingSoon?: boolean
 }
 
-function LargeSidebarItem({ isActive = false, IconOrImgUrl, href, title }: LargeSidebarItemProps) {
+function LargeSidebarItem({
+  isActive = false,
+  IconOrImgUrl,
+  href,
+  title,
+  comingSoon = false
+}: LargeSidebarItemProps) {
+  const icon =
+    typeof IconOrImgUrl === 'string' ? (
+      <Image src={IconOrImgUrl} width={32} height={32} alt={title} className='rounded-full' />
+    ) : (
+      <IconOrImgUrl className='h-10 w-10' />
+    )
+
+  if (comingSoon) {
+    return (
+      <div
+        aria-disabled='true'
+        title='Sắp ra mắt'
+        className='flex w-full cursor-default items-center justify-start gap-1 rounded-sm px-4 py-2 opacity-50'
+      >
+        {icon}
+        <div className='flex flex-1 items-center justify-between gap-1 overflow-hidden'>
+          <span className='truncate text-sm'>{title}</span>
+          <span className='text-secondary-foreground text-[10px] whitespace-nowrap'>Sắp ra mắt</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <Button
       asChild
@@ -175,11 +243,7 @@ function LargeSidebarItem({ isActive = false, IconOrImgUrl, href, title }: Large
       className={`hover:bg-accent-foreground hover:text-accent rounded-sm ${isActive ? 'bg-accent font-bold' : ''}`}
     >
       <Link href={href} className='flex w-full items-center justify-start'>
-        {typeof IconOrImgUrl === 'string' ? (
-          <Image src={IconOrImgUrl} width={32} height={32} alt={title} className='rounded-full' />
-        ) : (
-          <IconOrImgUrl className='h-10 w-10' />
-        )}
+        {icon}
         <div className='overflow-hidden text-sm text-ellipsis whitespace-nowrap'>{title}</div>
       </Link>
     </Button>
