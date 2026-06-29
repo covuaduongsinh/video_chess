@@ -9,7 +9,10 @@ export default function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
+  // Mẫu chống hydration mismatch của next-themes: chỉ render nút sau khi mount ở client
+  // (lúc này mới biết theme đã resolve). Rule set-state-in-effect là false-positive ở đây.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true)
   }, [])
 

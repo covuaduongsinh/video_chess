@@ -9,28 +9,43 @@ import { Chessboard } from 'react-chessboard'
 /**
  * Chế độ luyện tập (drill): máy đi nước đối phương, người học đi nước của mình.
  * Chấm đúng/sai, đếm số lỗi và thời gian. (Chess-PGN-Trainer style)
+ *
+ * Bọc ngoài giữ `resetKey`: khi bấm "Làm lại" hoặc đổi PGN, ta đổi `key` để remount
+ * vòng luyện (`DrillRound`) → state khởi tạo lại sạch, không cần effect reset thủ công.
  */
 export function PgnTrainer({ pgn, orientation = 'white' }: { pgn: string; orientation?: 'white' | 'black' }) {
+  const [resetKey, setResetKey] = useState(0)
+  return (
+    <DrillRound
+      key={`${pgn}::${resetKey}`}
+      pgn={pgn}
+      orientation={orientation}
+      onReset={() => setResetKey((k) => k + 1)}
+    />
+  )
+}
+
+function DrillRound({
+  pgn,
+  orientation,
+  onReset
+}: {
+  pgn: string
+  orientation: 'white' | 'black'
+  onReset: () => void
+}) {
   const { startFen, moves } = useMemo(() => getMoveList(pgn), [pgn])
   const heroColor = orientation === 'white' ? 'w' : 'b'
 
-  const [resetKey, setResetKey] = useState(0)
   const gameRef = useRef(new Chess(startFen))
   const [fen, setFen] = useState(startFen)
   const [step, setStep] = useState(0)
   const [errors, setErrors] = useState(0)
-  const [done, setDone] = useState(false)
   const [startedAt] = useState(() => Date.now())
   const [elapsed, setElapsed] = useState(0)
 
-  // reset khi bấm làm lại
-  useEffect(() => {
-    gameRef.current = new Chess(startFen)
-    setFen(startFen)
-    setStep(0)
-    setErrors(0)
-    setDone(false)
-  }, [resetKey, startFen])
+  // Hoàn thành = đã đi hết nước (state dẫn xuất, không lưu riêng).
+  const done = moves.length > 0 && step >= moves.length
 
   // đồng hồ
   useEffect(() => {
@@ -39,12 +54,9 @@ export function PgnTrainer({ pgn, orientation = 'white' }: { pgn: string; orient
     return () => clearInterval(t)
   }, [done, startedAt])
 
-  // máy tự đi nước đối phương
+  // máy tự đi nước đối phương (setState chỉ trong callback setTimeout — không đồng bộ trong effect)
   useEffect(() => {
-    if (done || step >= moves.length) {
-      if (step >= moves.length && moves.length > 0) setDone(true)
-      return
-    }
+    if (step >= moves.length) return
     const next = moves[step]
     if (next.color !== heroColor) {
       const t = setTimeout(() => {
@@ -54,7 +66,7 @@ export function PgnTrainer({ pgn, orientation = 'white' }: { pgn: string; orient
       }, 450)
       return () => clearTimeout(t)
     }
-  }, [step, moves, heroColor, done])
+  }, [step, moves, heroColor])
 
   function onPieceDrop({ sourceSquare, targetSquare }: { sourceSquare: string; targetSquare: string | null }) {
     if (done || !targetSquare) return false
@@ -82,7 +94,7 @@ export function PgnTrainer({ pgn, orientation = 'white' }: { pgn: string; orient
         <span>
           Thời gian: <b>{elapsed}s</b>
         </span>
-        <Button variant='secondary' size='sm' onClick={() => setResetKey((k) => k + 1)}>
+        <Button variant='secondary' size='sm' onClick={onReset}>
           Làm lại
         </Button>
       </div>
@@ -105,7 +117,11 @@ export function PgnTrainer({ pgn, orientation = 'white' }: { pgn: string; orient
         </div>
       ) : (
         <p className='text-secondary-foreground text-center text-sm'>
-          {moves.length === 0 ? 'Không có nước đi để luyện.' : isHeroTurn ? 'Đến lượt bạn — hãy đi nước đúng.' : 'Đối phương đang đi...'}
+          {moves.length === 0
+            ? 'Không có nước đi để luyện.'
+            : isHeroTurn
+              ? 'Đến lượt bạn — hãy đi nước đúng.'
+              : 'Đối phương đang đi...'}
         </p>
       )}
     </div>
