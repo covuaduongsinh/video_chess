@@ -41,7 +41,7 @@ function AdminLoginForm() {
       <form onSubmit={onSubmit} className='border-border w-full max-w-sm space-y-4 rounded-lg border p-6'>
         <div>
           <h1 className='text-xl font-bold'>Đăng nhập quản trị</h1>
-          <p className='text-secondary-foreground text-sm'>TylooTube — Cờ vua Dương Sinh</p>
+          <p className='text-secondary-foreground text-sm'>Cờ vua Dương Sinh — Vui trí tuệ</p>
         </div>
         <div className='space-y-1'>
           <label className='text-sm font-medium' htmlFor='email'>

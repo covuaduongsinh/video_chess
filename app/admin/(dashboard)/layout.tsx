@@ -17,8 +17,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className='flex min-h-screen flex-col'>
       <header className='border-border flex items-center justify-between border-b px-4 py-3'>
-        <Link href='/admin' className='font-bold'>
-          TylooTube Admin
+        <Link href='/admin' className='flex items-baseline gap-1.5 font-bold'>
+          <span className='text-primary'>Cờ vua Dương Sinh</span>
+          <span className='text-muted-foreground text-xs font-normal'>Admin</span>
         </Link>
         <div className='flex items-center gap-3'>
           <span className='text-secondary-foreground text-sm'>{profile?.display_name ?? user.email}</span>

@@ -9,9 +9,30 @@ import { getLessonByVideoId } from '@/lib/queries/learning'
 import { getRelatedVideos, getVideoById } from '@/lib/queries/videos'
 import { postedAgo, viewCount } from '@/lib/utils'
 import { GraduationCap } from 'lucide-react'
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+
+type Props = { searchParams: Promise<{ v?: string }> }
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const { v } = await searchParams
+  if (!v) return {}
+  const video = await getVideoById(v)
+  if (!video) return {}
+
+  const desc = video.description?.slice(0, 160) ?? `Xem video cờ vua: ${video.title}`
+  return {
+    title: video.title,
+    description: desc,
+    openGraph: {
+      title: video.title,
+      description: desc,
+      ...(video.thumbnailUrl ? { images: [{ url: video.thumbnailUrl, width: 1280, height: 720 }] } : {})
+    }
+  }
+}
 
 const DIFFICULTY_LABELS: Record<string, string> = {
   beginner: 'Cơ bản',
@@ -19,7 +40,7 @@ const DIFFICULTY_LABELS: Record<string, string> = {
   advanced: 'Nâng cao'
 }
 
-export default async function WatchPage({ searchParams }: { searchParams: Promise<{ v?: string }> }) {
+export default async function WatchPage({ searchParams }: Props) {
   const { v } = await searchParams
   if (!v) notFound()
 

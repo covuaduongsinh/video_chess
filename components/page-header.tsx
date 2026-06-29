@@ -30,7 +30,7 @@ export function PageHeader() {
           <input
             type='search'
             name='q'
-            placeholder='Search'
+            placeholder='Tìm kiếm video, bài học...'
             className='border-foreground shadow-foreground/20 dark:focus:border-foreground w-full rounded-l-full border px-4 py-1 text-sm shadow-inner outline-none focus:border-blue-500'
           />
           <Button
@@ -80,8 +80,9 @@ export function PageHeaderFirstSection({ hidden = false }: PageHeaderFirstSectio
       <Button onClick={toggle} variant='ghost' size='icon'>
         <Menu />
       </Button>
-      <Link href='/'>
-        <Image src='/logo.png' alt='TylooTube logo' width={75} height={36} priority />
+      <Link href='/' className='flex flex-col leading-none'>
+        <Image src='/logo.png' alt='Cờ vua Dương Sinh' width={75} height={36} priority />
+        <span className='text-brand-gold hidden text-[9px] font-bold tracking-wide sm:block'>Vui trí tuệ</span>
       </Link>
     </div>
   )
