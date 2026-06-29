@@ -59,11 +59,11 @@ create policy vt_video_likes_viewer on public.vt_video_likes for all
   with check (user_id = auth.uid());
 
 -- ---------------------------------------------------------------------------
--- Subscriptions: viewer đăng ký/huỷ kênh
+-- Subscriptions: viewer đăng ký/huỷ kênh (cột là subscriber_id, không phải user_id)
 -- ---------------------------------------------------------------------------
 create policy vt_subscriptions_viewer on public.vt_subscriptions for all
-  using (user_id = auth.uid())
-  with check (user_id = auth.uid());
+  using (subscriber_id = auth.uid())
+  with check (subscriber_id = auth.uid());
 
 -- ---------------------------------------------------------------------------
 -- Watch history: viewer ghi lịch sử xem
