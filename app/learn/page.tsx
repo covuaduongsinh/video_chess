@@ -1,5 +1,7 @@
 import { AppShell } from '@/components/app-shell'
+import { Button } from '@/components/ui/button'
 import { getPublishedLessons } from '@/lib/queries/learning'
+import { Brain } from 'lucide-react'
 import Link from 'next/link'
 
 const DIFF: Record<string, string> = {
@@ -13,7 +15,15 @@ export default async function LearnPage() {
 
   return (
     <AppShell>
-      <h1 className='mb-4 text-2xl font-bold'>Học qua video + cờ</h1>
+      <div className='mb-6 flex items-center justify-between gap-4'>
+        <h1 className='text-2xl font-bold'>Học qua video + cờ</h1>
+        <Button asChild>
+          <Link href='/learn/review'>
+            <Brain className='mr-2 size-4' />
+            Ôn tập SRS
+          </Link>
+        </Button>
+      </div>
       {lessons.length === 0 ? (
         <p className='text-secondary-foreground'>Chưa có bài học nào.</p>
       ) : (

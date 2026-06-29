@@ -1,5 +1,6 @@
 'use client'
 
+import { submitDrillAttempt } from '@/app/learn/review/actions'
 import { Button } from '@/components/ui/button'
 import { getMoveList } from '@/lib/chess/pgn'
 import { Chess } from 'chess.js'
@@ -13,13 +14,22 @@ import { Chessboard } from 'react-chessboard'
  * Bọc ngoài giữ `resetKey`: khi bấm "Làm lại" hoặc đổi PGN, ta đổi `key` để remount
  * vòng luyện (`DrillRound`) → state khởi tạo lại sạch, không cần effect reset thủ công.
  */
-export function PgnTrainer({ pgn, orientation = 'white' }: { pgn: string; orientation?: 'white' | 'black' }) {
+export function PgnTrainer({
+  pgn,
+  orientation = 'white',
+  drillSetId
+}: {
+  pgn: string
+  orientation?: 'white' | 'black'
+  drillSetId?: string
+}) {
   const [resetKey, setResetKey] = useState(0)
   return (
     <DrillRound
       key={`${pgn}::${resetKey}`}
       pgn={pgn}
       orientation={orientation}
+      drillSetId={drillSetId}
       onReset={() => setResetKey((k) => k + 1)}
     />
   )
@@ -28,10 +38,12 @@ export function PgnTrainer({ pgn, orientation = 'white' }: { pgn: string; orient
 function DrillRound({
   pgn,
   orientation,
+  drillSetId,
   onReset
 }: {
   pgn: string
   orientation: 'white' | 'black'
+  drillSetId?: string
   onReset: () => void
 }) {
   const { startFen, moves } = useMemo(() => getMoveList(pgn), [pgn])
@@ -46,6 +58,14 @@ function DrillRound({
 
   // Hoàn thành = đã đi hết nước (state dẫn xuất, không lưu riêng).
   const done = moves.length > 0 && step >= moves.length
+
+  // Ghi kết quả drill khi hoàn thành (chỉ ghi 1 lần)
+  const savedRef = useRef(false)
+  useEffect(() => {
+    if (!done || savedRef.current || !drillSetId) return
+    savedRef.current = true
+    submitDrillAttempt(drillSetId, errors, elapsed).catch(() => {/* fire-and-forget */})
+  }, [done, drillSetId, errors, elapsed])
 
   // đồng hồ
   useEffect(() => {
