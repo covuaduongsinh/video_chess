@@ -95,6 +95,9 @@ export default async function AdminLessonsPage() {
                 <td className='p-3'>{l.status}</td>
                 <td className='p-3'>
                   <div className='flex justify-end gap-3'>
+                    <Link href={`/admin/lessons/${l.id}`} className='underline'>
+                      Sửa
+                    </Link>
                     <Link href={`/learn/${l.slug}`} className='underline'>
                       Mở
                     </Link>

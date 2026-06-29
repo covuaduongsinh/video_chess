@@ -40,6 +40,27 @@ export async function getPublishedLessons(): Promise<LessonCard[]> {
   return data ?? []
 }
 
+export async function getLessonForAdminById(
+  id: string
+): Promise<(LessonCard & { status: string; videoId: string | null }) | null> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('vt_lessons')
+    .select('id, title, slug, description, difficulty, status, video_id')
+    .eq('id', id)
+    .maybeSingle()
+  if (!data) return null
+  return {
+    id: data.id,
+    title: data.title,
+    slug: data.slug,
+    description: data.description,
+    difficulty: data.difficulty,
+    status: data.status,
+    videoId: data.video_id
+  }
+}
+
 export async function getLessonsForAdmin(): Promise<(LessonCard & { status: string })[]> {
   const supabase = await createClient()
   const { data } = await supabase

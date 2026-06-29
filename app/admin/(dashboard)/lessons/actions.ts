@@ -69,6 +69,28 @@ export async function createLesson(formData: FormData) {
   redirect('/admin/lessons')
 }
 
+export async function updateLesson(id: string, formData: FormData) {
+  const { title, slug, difficulty, status } = schema.parse({
+    title: formData.get('title'),
+    slug: formData.get('slug'),
+    difficulty: formData.get('difficulty'),
+    status: formData.get('status')
+  })
+  const description = str(formData.get('description'))
+  const videoId = str(formData.get('video_id'))
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('vt_lessons')
+    .update({ title, slug, description, video_id: videoId, difficulty, status })
+    .eq('id', id)
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/admin/lessons')
+  revalidatePath('/learn')
+  redirect('/admin/lessons')
+}
+
 export async function deleteLesson(id: string) {
   const supabase = await createClient()
   const { error } = await supabase.from('vt_lessons').delete().eq('id', id)
