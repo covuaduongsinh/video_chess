@@ -15,6 +15,11 @@ type SidebarContextType = {
 
 const SidebarContext = createContext<SidebarContextType | null>(null)
 
+/** Màn hình nhỏ (< 1024px) → dùng sidebar dạng overlay. */
+function isSmallScreen(): boolean {
+  return window.innerWidth < 1024
+}
+
 export function useSidebarContext() {
   const context = useContext(SidebarContext)
   if (context === null) {
@@ -39,11 +44,7 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
     return () => {
       window.removeEventListener('resize', handler)
     }
-  })
-
-  function isSmallScreen(): boolean {
-    return window.innerWidth < 1024
-  }
+  }, [])
 
   function toggle(): void {
     if (isSmallScreen()) {
