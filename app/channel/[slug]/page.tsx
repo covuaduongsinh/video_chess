@@ -2,10 +2,29 @@ import { AppShell, VideoGrid } from '@/components/app-shell'
 import { VideoGridItem } from '@/components/video-grid-item'
 import { getChannelBySlug } from '@/lib/queries/catalog'
 import { getChannelVideos } from '@/lib/queries/videos'
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 
-export default async function ChannelPage({ params }: { params: Promise<{ slug: string }> }) {
+type Props = { params: Promise<{ slug: string }> }
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  const channel = await getChannelBySlug(slug)
+  if (!channel) return {}
+
+  return {
+    title: channel.name,
+    description: channel.description?.slice(0, 160) ?? `Kênh cờ vua: ${channel.name}`,
+    openGraph: {
+      title: channel.name,
+      description: channel.description?.slice(0, 160) ?? undefined,
+      ...(channel.avatarUrl ? { images: [{ url: channel.avatarUrl }] } : {})
+    }
+  }
+}
+
+export default async function ChannelPage({ params }: Props) {
   const { slug } = await params
   const channel = await getChannelBySlug(slug)
   if (!channel) notFound()

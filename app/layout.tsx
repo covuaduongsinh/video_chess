@@ -1,22 +1,34 @@
 import Providers from '@/contexts/providers'
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Roboto } from 'next/font/google'
 import './globals.css'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin']
+const roboto = Roboto({
+  variable: '--font-roboto',
+  subsets: ['latin', 'vietnamese'],
+  weight: ['400', '500', '700']
 })
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin']
-})
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://covua.duongsinh.vn'
 
 export const metadata: Metadata = {
-  title: 'TylooTube',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'Cờ vua Dương Sinh — Vui trí tuệ',
+    template: '%s | Cờ vua Dương Sinh'
+  },
   description:
-    'A modern YouTube clone built with Next.js 15, TailwindCSS and ShadCN, leveraging the latest web technologies to create a seamless video sharing and viewing experience.'
+    'Nền tảng video và học tập cờ vua Dương Sinh — bài giảng, giải đấu, luyện nước đi và ôn tập SRS theo lộ trình 6 cấp.',
+  keywords: ['cờ vua', 'chess', 'Dương Sinh', 'học cờ vua', 'video cờ vua', 'PGN', 'SRS'],
+  authors: [{ name: 'Cờ vua Dương Sinh', url: SITE_URL }],
+  openGraph: {
+    type: 'website',
+    siteName: 'Cờ vua Dương Sinh',
+    locale: 'vi_VN'
+  },
+  twitter: {
+    card: 'summary_large_image'
+  }
 }
 
 export default function RootLayout({
@@ -26,8 +38,8 @@ export default function RootLayout({
 }>) {
   return (
     <Providers>
-      <html lang='en' suppressHydrationWarning>
-        <body className={`${geistSans.variable} ${geistMono.variable} bg-background antialiased`}>{children}</body>
+      <html lang='vi' suppressHydrationWarning>
+        <body className={`${roboto.variable} bg-background font-sans antialiased`}>{children}</body>
       </html>
     </Providers>
   )
