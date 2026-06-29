@@ -64,6 +64,7 @@ export function Sidebar({
         <LargeSidebarSection>
           <LargeSidebarItem isActive IconOrImgUrl={Home} href='/' title='Trang chủ' />
           <LargeSidebarItem IconOrImgUrl={GraduationCap} href='/learn' title='Học cờ' />
+          <LargeSidebarItem IconOrImgUrl={Brain} href='/learn/review' title='Ôn tập SRS' />
         </LargeSidebarSection>
 
         {categories.length > 0 && (
