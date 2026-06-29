@@ -1,6 +1,6 @@
 import { AppSidebar } from '@/components/app-sidebar'
 import { CategoryBar } from '@/components/category-bar'
-import { PageHeader } from '@/components/page-header'
+import { PageHeaderServer } from '@/components/page-header-server'
 import { VideoGridItem } from '@/components/video-grid-item'
 import { getCategories } from '@/lib/queries/catalog'
 import { getPublishedVideos } from '@/lib/queries/videos'
@@ -14,7 +14,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
 
   return (
     <div className='flex max-h-screen flex-col'>
-      <PageHeader />
+      <PageHeaderServer />
       <div className='grid grid-flow-col overflow-auto'>
         <AppSidebar />
         <div className='overflow-x-hidden px-2 pb-4'>

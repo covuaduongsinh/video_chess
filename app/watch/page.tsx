@@ -1,5 +1,5 @@
 import { AppSidebar } from '@/components/app-sidebar'
-import { PageHeader } from '@/components/page-header'
+import { PageHeaderServer } from '@/components/page-header-server'
 import { Badge } from '@/components/ui/badge'
 import { VideoGridItem } from '@/components/video-grid-item'
 import { VideoPlayer } from '@/components/video-player'
@@ -62,7 +62,7 @@ export default async function WatchPage({ searchParams }: Props) {
 
   return (
     <div className='flex max-h-screen flex-col'>
-      <PageHeader />
+      <PageHeaderServer />
       <div className='grid grid-flow-col overflow-auto'>
         <AppSidebar />
         <div className='grid grid-cols-1 gap-6 overflow-x-hidden px-4 pb-8 lg:grid-cols-[1fr_320px]'>

@@ -2,13 +2,16 @@
 
 import { Button } from '@/components/ui/button'
 import { useSidebarContext } from '@/contexts/sidebar-context'
-import { ArrowLeft, Bell, Menu, Mic, Search, Upload, User } from 'lucide-react'
+import { ArrowLeft, Bell, Menu, Mic, Search } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import ThemeToggle from './theme-toggle'
+import { UserMenu } from './user-menu'
 
-export function PageHeader() {
+type UserInfo = { email: string | undefined; displayName: string | null; avatarUrl: string | null } | null
+
+export function PageHeader({ user = null }: { user?: UserInfo }) {
   const [showFullWidthSearch, setShowFullWidthSearch] = useState(false)
 
   return (
@@ -40,7 +43,7 @@ export function PageHeader() {
             <Search />
           </Button>
         </div>
-        <Button type='button' size='icon' className='shrink-0'>
+        <Button type='button' size='icon' className='shrink-0' aria-label='Tìm kiếm bằng giọng nói'>
           <Mic />
         </Button>
       </form>
@@ -50,18 +53,14 @@ export function PageHeader() {
           variant='ghost'
           size='icon'
           className='md:hidden'
+          aria-label='Tìm kiếm'
         >
           <Search />
         </Button>
-        <Button variant='ghost' size='icon'>
-          <Upload />
-        </Button>
-        <Button variant='ghost' size='icon'>
+        <Button variant='ghost' size='icon' aria-label='Thông báo'>
           <Bell />
         </Button>
-        <Button variant='ghost' size='icon'>
-          <User />
-        </Button>
+        <UserMenu user={user} />
         <ThemeToggle />
       </div>
     </div>

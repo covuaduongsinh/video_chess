@@ -34,9 +34,11 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl
   const isAdminArea = pathname.startsWith('/admin')
-  const isLoginPage = pathname === '/admin/login'
+  const isAdminLoginPage = pathname === '/admin/login'
+  // Route yêu cầu đăng nhập (nhưng không cần admin)
+  const isProtectedViewer = pathname.startsWith('/me') || pathname.startsWith('/learn/review')
 
-  if (isAdminArea && !isLoginPage) {
+  if (isAdminArea && !isAdminLoginPage) {
     if (!user) {
       const url = request.nextUrl.clone()
       url.pathname = '/admin/login'
@@ -55,6 +57,13 @@ export async function updateSession(request: NextRequest) {
       url.pathname = '/'
       return NextResponse.redirect(url)
     }
+  }
+
+  if (isProtectedViewer && !user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    url.searchParams.set('redirect', pathname)
+    return NextResponse.redirect(url)
   }
 
   return supabaseResponse
