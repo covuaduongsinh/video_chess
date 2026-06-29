@@ -1,11 +1,12 @@
 import { AppSidebar } from '@/components/app-sidebar'
 import { PageHeaderServer } from '@/components/page-header-server'
+import { RelatedGames } from '@/components/learn/related-games'
 import { Badge } from '@/components/ui/badge'
 import { VideoGridItem } from '@/components/video-grid-item'
 import { VideoPlayer } from '@/components/video-player'
 import { ViewCounter } from '@/components/view-counter'
 import { toEmbedUrl, toPlaybackUrl, usesIframe, type VideoProvider } from '@/lib/providers/embed'
-import { getLessonByVideoId } from '@/lib/queries/learning'
+import { getLessonByVideoId, getRelatedGamesForVideo } from '@/lib/queries/learning'
 import { getRelatedVideos, getVideoById } from '@/lib/queries/videos'
 import { postedAgo, viewCount } from '@/lib/utils'
 import { GraduationCap } from 'lucide-react'
@@ -55,9 +56,10 @@ export default async function WatchPage({ searchParams }: Props) {
   }
   const embedUrl = toEmbedUrl(source)
   const playbackUrl = toPlaybackUrl(source)
-  const [related, lesson] = await Promise.all([
+  const [related, lesson, relatedGames] = await Promise.all([
     getRelatedVideos(video.id, { categoryId: video.categoryId, channelId: video.channelId }),
-    getLessonByVideoId(video.id)
+    getLessonByVideoId(video.id),
+    getRelatedGamesForVideo(video.id)
   ])
 
   return (
@@ -70,6 +72,8 @@ export default async function WatchPage({ searchParams }: Props) {
             <ViewCounter videoId={video.id} />
             <VideoPlayer
               title={video.title}
+              provider={source.provider}
+              sourceId={video.sourceId}
               embedUrl={embedUrl}
               playbackUrl={playbackUrl}
               sourceUrl={video.sourceUrl}
@@ -127,6 +131,7 @@ export default async function WatchPage({ searchParams }: Props) {
             {video.description && (
               <p className='bg-secondary/50 rounded-lg p-3 text-sm whitespace-pre-wrap'>{video.description}</p>
             )}
+            <RelatedGames games={relatedGames} />
           </div>
 
           <aside className='flex flex-col gap-3'>

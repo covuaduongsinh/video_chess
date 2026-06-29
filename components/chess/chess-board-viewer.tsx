@@ -3,26 +3,55 @@
 import { Button } from '@/components/ui/button'
 import { getMoveList } from '@/lib/chess/pgn'
 import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Chessboard } from 'react-chessboard'
 
-/** Xem ván cờ theo PGN: đi tiến/lùi, bấm vào nước để nhảy tới. Hỗ trợ phím ←→Home End. */
+/**
+ * Xem ván cờ theo PGN: đi tiến/lùi, bấm vào nước để nhảy tới. Hỗ trợ phím ←→Home End.
+ *
+ * Hai chế độ:
+ * - Uncontrolled (chỉ truyền `pgn`): tự giữ vị trí nước hiện tại — như cũ.
+ * - Controlled (truyền `index` + `onIndexChange`): cha điều khiển "nhảy tới nước N",
+ *   dùng cho đồng bộ với video.
+ */
 export function ChessBoardViewer({
   pgn,
-  orientation = 'white'
+  orientation = 'white',
+  index: controlledIndex,
+  onIndexChange
 }: {
   pgn: string
   orientation?: 'white' | 'black'
+  index?: number
+  onIndexChange?: (index: number) => void
 }) {
   const { startFen, moves } = useMemo(() => getMoveList(pgn), [pgn])
   // index = 0 -> thế ban đầu; i -> sau nước thứ i
-  const [index, setIndex] = useState(0)
-  const fen = index === 0 ? startFen : moves[index - 1].fen
+  const [internalIndex, setInternalIndex] = useState(0)
+  const isControlled = controlledIndex != null
+  const index = isControlled ? controlledIndex : internalIndex
+  const fen = index === 0 ? startFen : (moves[index - 1]?.fen ?? startFen)
 
-  const goFirst = useCallback(() => setIndex(0), [])
-  const goPrev = useCallback(() => setIndex((i) => Math.max(0, i - 1)), [])
-  const goNext = useCallback(() => setIndex((i) => Math.min(moves.length, i + 1)), [moves.length])
-  const goLast = useCallback(() => setIndex(moves.length), [moves.length])
+  // Ref giữ index hiện tại để setIndex ổn định (không phụ thuộc index).
+  const indexRef = useRef(index)
+  useEffect(() => {
+    indexRef.current = index
+  }, [index])
+
+  const setIndex = useCallback(
+    (next: number | ((i: number) => number)) => {
+      const value = typeof next === 'function' ? next(indexRef.current) : next
+      const clamped = Math.max(0, Math.min(moves.length, value))
+      onIndexChange?.(clamped)
+      if (!isControlled) setInternalIndex(clamped)
+    },
+    [moves.length, onIndexChange, isControlled]
+  )
+
+  const goFirst = useCallback(() => setIndex(0), [setIndex])
+  const goPrev = useCallback(() => setIndex((i) => i - 1), [setIndex])
+  const goNext = useCallback(() => setIndex((i) => i + 1), [setIndex])
+  const goLast = useCallback(() => setIndex(moves.length), [setIndex, moves.length])
 
   // Điều hướng bàn phím: ←→ Home End
   useEffect(() => {

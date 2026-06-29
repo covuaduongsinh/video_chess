@@ -137,6 +137,7 @@ export type Database = {
           created_at: string
           id: string
           lesson_id: string
+          move_cues: Json
           pgn: string
           position: number
           start_fen: string | null
@@ -147,6 +148,7 @@ export type Database = {
           created_at?: string
           id?: string
           lesson_id: string
+          move_cues?: Json
           pgn: string
           position?: number
           start_fen?: string | null
@@ -157,6 +159,7 @@ export type Database = {
           created_at?: string
           id?: string
           lesson_id?: string
+          move_cues?: Json
           pgn?: string
           position?: number
           start_fen?: string | null
@@ -427,6 +430,12 @@ export type Database = {
         Row: { created_at: string; user_id: string; video_id: string }
         Insert: { created_at?: string; user_id: string; video_id: string }
         Update: { created_at?: string; user_id?: string; video_id?: string }
+        Relationships: []
+      }
+      vt_video_pgn_games: {
+        Row: { created_at: string; pgn_game_id: string; position: number; video_id: string }
+        Insert: { created_at?: string; pgn_game_id: string; position?: number; video_id: string }
+        Update: { created_at?: string; pgn_game_id?: string; position?: number; video_id?: string }
         Relationships: []
       }
       vt_videos: {

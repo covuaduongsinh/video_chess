@@ -4,13 +4,23 @@ import { ChessBoardViewer } from '@/components/chess/chess-board-viewer'
 import { PgnTrainer } from '@/components/chess/pgn-trainer'
 import { Button } from '@/components/ui/button'
 import { VideoPlayer } from '@/components/video-player'
+import type { VideoProvider } from '@/lib/providers/embed'
 import type { DrillSet, LessonChapter } from '@/lib/queries/learning'
-import { useState } from 'react'
+import { useVideoBoardSync } from '@/lib/video/use-video-board-sync'
+import { Link2, Link2Off } from 'lucide-react'
+import { useMemo, useState } from 'react'
 
 type LessonViewProps = {
   title: string
   description: string | null
-  player: { embedUrl: string | null; playbackUrl: string | null; sourceUrl: string | null; iframe: boolean } | null
+  player: {
+    provider: VideoProvider
+    sourceId: string | null
+    embedUrl: string | null
+    playbackUrl: string | null
+    sourceUrl: string | null
+    iframe: boolean
+  } | null
   chapters: LessonChapter[]
   drills: DrillSet[]
 }
@@ -24,13 +34,22 @@ function fmt(seconds: number | null) {
 
 export function LessonView({ title, description, player, chapters, drills }: LessonViewProps) {
   const [tab, setTab] = useState<'view' | 'practice'>('view')
-  const [chapterIdx, setChapterIdx] = useState(0)
   const [drillIdx, setDrillIdx] = useState(0)
 
-  const chapter = chapters[chapterIdx]
+  // Đồng bộ video ↔ bàn cờ. Chỉ cần videoTimestamp + moveCues của từng chương.
+  const syncChapters = useMemo(
+    () => chapters.map((c) => ({ videoTimestamp: c.videoTimestamp, moveCues: c.moveCues })),
+    [chapters]
+  )
+  const sync = useVideoBoardSync(syncChapters)
+
+  const chapter = chapters[sync.chapterIdx]
   const drill = drills[drillIdx]
   const practicePgn = drill?.pgn ?? chapter?.pgn ?? ''
   const practiceOrientation = drill?.orientation ?? 'white'
+
+  // Hiện nút bật/tắt "bám video" khi player điều khiển được và có mốc để bám.
+  const showFollowToggle = !!player && sync.controllable && sync.hasCues
 
   return (
     <div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
@@ -39,10 +58,14 @@ export function LessonView({ title, description, player, chapters, drills }: Les
         {player && (
           <VideoPlayer
             title={title}
+            provider={player.provider}
+            sourceId={player.sourceId}
             embedUrl={player.embedUrl}
             playbackUrl={player.playbackUrl}
             sourceUrl={player.sourceUrl}
             iframe={player.iframe}
+            onReady={sync.onReady}
+            onTimeUpdate={sync.onTimeUpdate}
           />
         )}
         <h1 className='text-lg font-bold'>{title}</h1>
@@ -55,11 +78,11 @@ export function LessonView({ title, description, player, chapters, drills }: Les
               <button
                 key={c.id}
                 onClick={() => {
-                  setChapterIdx(i)
+                  sync.handleChapterSelect(i)
                   setTab('view')
                 }}
                 className={`flex items-center justify-between rounded-md px-3 py-2 text-left text-sm ${
-                  i === chapterIdx ? 'bg-accent font-semibold' : 'hover:bg-accent/50'
+                  i === sync.chapterIdx ? 'bg-accent font-semibold' : 'hover:bg-accent/50'
                 }`}
               >
                 <span>{c.title ?? `Chương ${i + 1}`}</span>
@@ -72,18 +95,35 @@ export function LessonView({ title, description, player, chapters, drills }: Les
 
       {/* Cột phải: bàn cờ */}
       <div className='flex flex-col gap-3'>
-        <div className='flex gap-2'>
+        <div className='flex flex-wrap items-center gap-2'>
           <Button variant={tab === 'view' ? 'default' : 'secondary'} size='sm' onClick={() => setTab('view')}>
             Xem bài
           </Button>
           <Button variant={tab === 'practice' ? 'default' : 'secondary'} size='sm' onClick={() => setTab('practice')}>
             Luyện tập
           </Button>
+          {tab === 'view' && showFollowToggle && (
+            <Button
+              variant={sync.follow ? 'default' : 'outline'}
+              size='sm'
+              className='ml-auto'
+              onClick={() => sync.setFollow(!sync.follow)}
+              title='Tự động đưa bàn cờ theo video đang phát'
+            >
+              {sync.follow ? <Link2 className='mr-1 h-4 w-4' /> : <Link2Off className='mr-1 h-4 w-4' />}
+              {sync.follow ? 'Đang bám video' : 'Bám video'}
+            </Button>
+          )}
         </div>
 
         {tab === 'view' ? (
           chapter ? (
-            <ChessBoardViewer key={chapter.id} pgn={chapter.pgn} />
+            <ChessBoardViewer
+              key={chapter.id}
+              pgn={chapter.pgn}
+              index={player ? sync.moveIndex : undefined}
+              onIndexChange={player ? sync.handleBoardIndexChange : undefined}
+            />
           ) : (
             <p className='text-secondary-foreground text-sm'>Bài học chưa có thế cờ.</p>
           )

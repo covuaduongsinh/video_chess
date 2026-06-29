@@ -108,3 +108,71 @@ export async function deleteLesson(id: string) {
   revalidatePath('/admin/lessons')
   revalidatePath('/learn')
 }
+
+// --- Quản lý chương (PGN) -------------------------------------------------
+
+/** Nhận mốc thời gian dạng "M:SS" hoặc số giây → giây (int) | null. */
+function parseSeconds(v: FormDataEntryValue | null): number | null {
+  const s = str(v)
+  if (!s) return null
+  if (s.includes(':')) {
+    const [m, sec] = s.split(':')
+    const mm = Number(m)
+    const ss = Number(sec)
+    return Number.isFinite(mm) && Number.isFinite(ss) ? mm * 60 + ss : null
+  }
+  const n = Number(s)
+  return Number.isFinite(n) ? Math.round(n) : null
+}
+
+function chapterFields(formData: FormData) {
+  const title = str(formData.get('title'))
+  const pgn = str(formData.get('pgn'))
+  const position = Number(str(formData.get('position')) ?? '0') || 0
+  const videoTimestamp = parseSeconds(formData.get('video_timestamp'))
+  if (!pgn || !isValidPgn(pgn)) throw new Error('PGN không hợp lệ')
+  return { title, pgn, position, video_timestamp: videoTimestamp }
+}
+
+export async function createChapter(lessonId: string, formData: FormData) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('vt_lesson_chapters')
+    .insert({ lesson_id: lessonId, ...chapterFields(formData) })
+  if (error) throw new Error(error.message)
+  revalidatePath(`/admin/lessons/${lessonId}`)
+  revalidatePath('/learn')
+}
+
+export async function updateChapter(chapterId: string, lessonId: string, formData: FormData) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('vt_lesson_chapters').update(chapterFields(formData)).eq('id', chapterId)
+  if (error) throw new Error(error.message)
+  revalidatePath(`/admin/lessons/${lessonId}`)
+  revalidatePath('/learn')
+}
+
+export async function deleteChapter(chapterId: string, lessonId: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('vt_lesson_chapters').delete().eq('id', chapterId)
+  if (error) throw new Error(error.message)
+  revalidatePath(`/admin/lessons/${lessonId}`)
+  revalidatePath('/learn')
+}
+
+const cueSchema = z.array(z.object({ idx: z.number().int().min(0), t: z.number().min(0) }))
+
+/** Lưu mốc đồng bộ theo nước cho một chương (gọi từ Sync Studio). */
+export async function saveChapterCues(chapterId: string, lessonId: string, cues: { idx: number; t: number }[]) {
+  const parsed = cueSchema.parse(cues)
+  // Khử trùng theo idx (giữ mốc cuối cùng), rồi sắp theo idx.
+  const map = new Map<number, number>()
+  for (const c of parsed) map.set(c.idx, c.t)
+  const clean = [...map.entries()].map(([idx, t]) => ({ idx, t })).sort((a, b) => a.idx - b.idx)
+
+  const supabase = await createClient()
+  const { error } = await supabase.from('vt_lesson_chapters').update({ move_cues: clean }).eq('id', chapterId)
+  if (error) throw new Error(error.message)
+  revalidatePath(`/admin/lessons/${lessonId}/sync/${chapterId}`)
+  revalidatePath('/learn')
+}

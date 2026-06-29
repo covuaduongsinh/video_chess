@@ -38,6 +38,8 @@ export default async function LessonPage({ params }: Props) {
           playbackUrl: v.playbackUrl
         }
         return {
+          provider: source.provider,
+          sourceId: v.sourceId,
           embedUrl: toEmbedUrl(source),
           playbackUrl: toPlaybackUrl(source),
           sourceUrl: v.sourceUrl,

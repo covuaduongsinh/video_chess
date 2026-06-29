@@ -82,3 +82,29 @@ export async function deleteVideo(id: string) {
   revalidatePath('/admin/videos')
   revalidatePath('/')
 }
+
+// --- Gắn ván cờ liên quan vào video (khám phá ngược) ----------------------
+
+export async function linkGameToVideo(videoId: string, formData: FormData) {
+  const gameId = str(formData.get('pgn_game_id'))
+  if (!gameId) return
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('vt_video_pgn_games')
+    .insert({ video_id: videoId, pgn_game_id: gameId })
+  if (error) throw new Error(error.message)
+  revalidatePath(`/admin/videos/${videoId}`)
+  revalidatePath('/watch')
+}
+
+export async function unlinkGameFromVideo(videoId: string, gameId: string) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('vt_video_pgn_games')
+    .delete()
+    .eq('video_id', videoId)
+    .eq('pgn_game_id', gameId)
+  if (error) throw new Error(error.message)
+  revalidatePath(`/admin/videos/${videoId}`)
+  revalidatePath('/watch')
+}

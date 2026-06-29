@@ -1,5 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
 import { getVideoById, type VideoDetail } from '@/lib/queries/videos'
+import type { MoveCue } from '@/lib/video/player'
+
+/** Đọc an toàn cột jsonb move_cues thành mảng MoveCue (bỏ qua dữ liệu hỏng). */
+function parseMoveCues(raw: unknown): MoveCue[] {
+  if (!Array.isArray(raw)) return []
+  return raw
+    .filter(
+      (x): x is MoveCue =>
+        !!x && typeof x === 'object' && typeof (x as MoveCue).idx === 'number' && typeof (x as MoveCue).t === 'number'
+    )
+    .map((x) => ({ idx: x.idx, t: x.t }))
+    .sort((a, b) => a.idx - b.idx)
+}
 
 export type LessonCard = {
   id: string
@@ -16,6 +29,7 @@ export type LessonChapter = {
   position: number
   pgn: string
   videoTimestamp: number | null
+  moveCues: MoveCue[]
 }
 
 export type DrillSet = {
@@ -100,7 +114,7 @@ export async function getLessonBySlug(slug: string): Promise<LessonDetail | null
   const [{ data: chapters }, { data: drills }, video] = await Promise.all([
     supabase
       .from('vt_lesson_chapters')
-      .select('id, title, position, pgn, video_timestamp')
+      .select('id, title, position, pgn, video_timestamp, move_cues')
       .eq('lesson_id', lesson.id)
       .order('position', { ascending: true }),
     supabase.from('vt_drill_sets').select('id, title, pgn, orientation').eq('lesson_id', lesson.id),
@@ -120,7 +134,8 @@ export async function getLessonBySlug(slug: string): Promise<LessonDetail | null
       title: c.title,
       position: c.position,
       pgn: c.pgn,
-      videoTimestamp: c.video_timestamp
+      videoTimestamp: c.video_timestamp,
+      moveCues: parseMoveCues(c.move_cues)
     })),
     drills: (drills ?? []).map((d) => ({
       id: d.id,
@@ -128,6 +143,51 @@ export async function getLessonBySlug(slug: string): Promise<LessonDetail | null
       pgn: d.pgn,
       orientation: d.orientation as 'white' | 'black'
     }))
+  }
+}
+
+/** Danh sách chương của một bài học (cho admin quản lý + gán mốc). */
+export async function getChaptersForAdmin(lessonId: string): Promise<LessonChapter[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('vt_lesson_chapters')
+    .select('id, title, position, pgn, video_timestamp, move_cues')
+    .eq('lesson_id', lessonId)
+    .order('position', { ascending: true })
+  return (data ?? []).map((c) => ({
+    id: c.id,
+    title: c.title,
+    position: c.position,
+    pgn: c.pgn,
+    videoTimestamp: c.video_timestamp,
+    moveCues: parseMoveCues(c.move_cues)
+  }))
+}
+
+export type ChapterSyncData = LessonChapter & { lessonId: string; video: VideoDetail | null }
+
+/** Một chương + video của bài học chứa nó — dữ liệu cho Sync Studio. */
+export async function getChapterForSync(chapterId: string): Promise<ChapterSyncData | null> {
+  const supabase = await createClient()
+  const { data: c } = await supabase
+    .from('vt_lesson_chapters')
+    .select('id, lesson_id, title, position, pgn, video_timestamp, move_cues')
+    .eq('id', chapterId)
+    .maybeSingle()
+  if (!c) return null
+
+  const { data: lesson } = await supabase.from('vt_lessons').select('video_id').eq('id', c.lesson_id).maybeSingle()
+  const video = lesson?.video_id ? await getVideoById(lesson.video_id) : null
+
+  return {
+    id: c.id,
+    lessonId: c.lesson_id,
+    title: c.title,
+    position: c.position,
+    pgn: c.pgn,
+    videoTimestamp: c.video_timestamp,
+    moveCues: parseMoveCues(c.move_cues),
+    video
   }
 }
 
@@ -155,6 +215,35 @@ export type PgnGameRow = {
   black: string | null
   result: string | null
   eco: string | null
+}
+
+export type RelatedGame = {
+  id: string
+  title: string | null
+  white: string | null
+  black: string | null
+  result: string | null
+  eco: string | null
+  pgn: string
+}
+
+/** Ván cờ được gắn (curated) cho một video — "khám phá ngược" Video → ván cờ. */
+export async function getRelatedGamesForVideo(videoId: string): Promise<RelatedGame[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('vt_video_pgn_games')
+    .select('position, vt_pgn_games(id, title, white, black, result, eco, pgn)')
+    .eq('video_id', videoId)
+    .order('position', { ascending: true })
+    .returns<{ position: number; vt_pgn_games: RelatedGame | null }[]>()
+  return (data ?? []).map((r) => r.vt_pgn_games).filter((g): g is RelatedGame => !!g)
+}
+
+/** Danh sách id ván cờ đã gắn với video (cho UI admin). */
+export async function getLinkedGameIds(videoId: string): Promise<string[]> {
+  const supabase = await createClient()
+  const { data } = await supabase.from('vt_video_pgn_games').select('pgn_game_id').eq('video_id', videoId)
+  return (data ?? []).map((r) => r.pgn_game_id)
 }
 
 export async function getPgnGames(search?: string): Promise<PgnGameRow[]> {
