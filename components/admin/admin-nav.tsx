@@ -12,7 +12,8 @@ const links = [
   { href: '/admin/playlists', label: 'Playlist' },
   { href: '/admin/pgn', label: 'CSDL PGN' },
   { href: '/admin/lessons', label: 'Bài học' },
-  { href: '/admin/drills', label: 'Luyện tập (Drill)' }
+  { href: '/admin/drills', label: 'Luyện tập (Drill)' },
+  { href: '/admin/tournaments', label: 'Giải đấu' }
 ]
 
 export function AdminNav() {

@@ -17,6 +17,14 @@ const schema = z.object({
   status: z.enum(['draft', 'published', 'hidden'])
 })
 
+const VALID_LEVELS = ['tot', 'ma', 'tuong', 'xe', 'hau', 'vua'] as const
+type Level = (typeof VALID_LEVELS)[number]
+
+function parseLevel(v: FormDataEntryValue | null): Level | null {
+  const s = str(v)
+  return s && (VALID_LEVELS as readonly string[]).includes(s) ? (s as Level) : null
+}
+
 export async function createLesson(formData: FormData) {
   const { title, slug, difficulty, status } = schema.parse({
     title: formData.get('title'),
@@ -26,6 +34,7 @@ export async function createLesson(formData: FormData) {
   })
   const description = str(formData.get('description'))
   const videoId = str(formData.get('video_id'))
+  const level = parseLevel(formData.get('level'))
   const pgn = str(formData.get('pgn'))
   const orientation = (str(formData.get('orientation')) ?? 'white') as 'white' | 'black'
   const makeDrill = formData.get('make_drill') === 'on'
@@ -35,7 +44,7 @@ export async function createLesson(formData: FormData) {
   const supabase = await createClient()
   const { data: lesson, error } = await supabase
     .from('vt_lessons')
-    .insert({ title, slug, description, video_id: videoId, difficulty, status })
+    .insert({ title, slug, description, video_id: videoId, difficulty, status, level })
     .select('id')
     .single()
   if (error) throw new Error(error.message)
@@ -78,11 +87,12 @@ export async function updateLesson(id: string, formData: FormData) {
   })
   const description = str(formData.get('description'))
   const videoId = str(formData.get('video_id'))
+  const level = parseLevel(formData.get('level'))
 
   const supabase = await createClient()
   const { error } = await supabase
     .from('vt_lessons')
-    .update({ title, slug, description, video_id: videoId, difficulty, status })
+    .update({ title, slug, description, video_id: videoId, difficulty, status, level })
     .eq('id', id)
   if (error) throw new Error(error.message)
 

@@ -29,7 +29,7 @@ export default async function AdminLessonsPage() {
           <label className={labelCls}>Mô tả</label>
           <textarea name='description' rows={2} className={inputCls} />
         </div>
-        <div className='grid grid-cols-3 gap-3'>
+        <div className='grid grid-cols-4 gap-3'>
           <div>
             <label className={labelCls}>Video</label>
             <select name='video_id' className={inputCls}>
@@ -39,6 +39,18 @@ export default async function AdminLessonsPage() {
                   {v.title}
                 </option>
               ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>Cấp (lộ trình)</label>
+            <select name='level' className={inputCls} defaultValue=''>
+              <option value=''>— Chưa phân cấp —</option>
+              <option value='tot'>♟ Tốt (Cấp 1)</option>
+              <option value='ma'>♞ Mã (Cấp 2)</option>
+              <option value='tuong'>♝ Tượng (Cấp 3)</option>
+              <option value='xe'>♜ Xe (Cấp 4)</option>
+              <option value='hau'>♛ Hậu (Cấp 5)</option>
+              <option value='vua'>♚ Vua (Cấp 6)</option>
             </select>
           </div>
           <div>
