@@ -173,6 +173,7 @@ export type Database = {
           description: string | null
           difficulty: string
           id: string
+          level: string | null
           slug: string
           status: string
           title: string
@@ -186,6 +187,7 @@ export type Database = {
           description?: string | null
           difficulty?: string
           id?: string
+          level?: string | null
           slug: string
           status?: string
           title: string
@@ -199,11 +201,57 @@ export type Database = {
           description?: string | null
           difficulty?: string
           id?: string
+          level?: string | null
           slug?: string
           status?: string
           title?: string
           updated_at?: string
           video_id?: string | null
+        }
+        Relationships: []
+      }
+      vt_tournaments: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          date_end: string | null
+          date_start: string | null
+          description: string | null
+          id: string
+          location: string | null
+          prize_info: string | null
+          slug: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          date_end?: string | null
+          date_start?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          prize_info?: string | null
+          slug: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string
+          date_end?: string | null
+          date_start?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          prize_info?: string | null
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }

@@ -47,7 +47,7 @@ export default async function EditLessonPage({ params }: { params: Promise<{ id:
           <textarea id='description' name='description' rows={3} defaultValue={lesson.description ?? ''} className={inputCls} />
         </div>
 
-        <div className='grid grid-cols-3 gap-3'>
+        <div className='grid grid-cols-4 gap-3'>
           <div>
             <label className={labelCls} htmlFor='video_id'>
               Video
@@ -59,6 +59,20 @@ export default async function EditLessonPage({ params }: { params: Promise<{ id:
                   {v.title}
                 </option>
               ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelCls} htmlFor='level'>
+              Cấp (lộ trình)
+            </label>
+            <select id='level' name='level' defaultValue={lesson.level ?? ''} className={inputCls}>
+              <option value=''>— Chưa phân cấp —</option>
+              <option value='tot'>♟ Tốt (Cấp 1)</option>
+              <option value='ma'>♞ Mã (Cấp 2)</option>
+              <option value='tuong'>♝ Tượng (Cấp 3)</option>
+              <option value='xe'>♜ Xe (Cấp 4)</option>
+              <option value='hau'>♛ Hậu (Cấp 5)</option>
+              <option value='vua'>♚ Vua (Cấp 6)</option>
             </select>
           </div>
           <div>

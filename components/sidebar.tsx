@@ -51,8 +51,9 @@ export function Sidebar({
       >
         <SmallSidebarItem IconOrImgUrl={Home} href='/' title='Trang chủ' />
         <SmallSidebarItem IconOrImgUrl={GraduationCap} href='/learn' title='Học' />
+        <SmallSidebarItem IconOrImgUrl={Trophy} href='/learn/roadmap' title='Lộ trình' />
+        <SmallSidebarItem IconOrImgUrl={Swords} href='/tournaments' title='Giải đấu' />
         <SmallSidebarItem comingSoon IconOrImgUrl={Library} href='#' title='Thư viện' />
-        <SmallSidebarItem comingSoon IconOrImgUrl={History} href='#' title='Lịch sử' />
       </aside>
       {isSmallOpen && <div className='fixed inset-0 z-999 bg-black/50 lg:hidden' onClick={close} />}
       <aside
@@ -65,6 +66,8 @@ export function Sidebar({
           <LargeSidebarItem isActive IconOrImgUrl={Home} href='/' title='Trang chủ' />
           <LargeSidebarItem IconOrImgUrl={GraduationCap} href='/learn' title='Học cờ' />
           <LargeSidebarItem IconOrImgUrl={Brain} href='/learn/review' title='Ôn tập SRS' />
+          <LargeSidebarItem IconOrImgUrl={Trophy} href='/learn/roadmap' title='Lộ trình 6 cấp' />
+          <LargeSidebarItem IconOrImgUrl={Swords} href='/tournaments' title='Giải đấu' />
         </LargeSidebarSection>
 
         {categories.length > 0 && (

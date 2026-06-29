@@ -7,6 +7,7 @@ export type LessonCard = {
   slug: string
   description: string | null
   difficulty: string
+  level: string | null
 }
 
 export type LessonChapter = {
@@ -30,13 +31,15 @@ export type LessonDetail = LessonCard & {
   drills: DrillSet[]
 }
 
-export async function getPublishedLessons(): Promise<LessonCard[]> {
+export async function getPublishedLessons(level?: string): Promise<LessonCard[]> {
   const supabase = await createClient()
-  const { data } = await supabase
+  let q = supabase
     .from('vt_lessons')
-    .select('id, title, slug, description, difficulty')
+    .select('id, title, slug, description, difficulty, level')
     .eq('status', 'published')
     .order('created_at', { ascending: false })
+  if (level) q = q.eq('level', level)
+  const { data } = await q
   return data ?? []
 }
 
@@ -46,7 +49,7 @@ export async function getLessonForAdminById(
   const supabase = await createClient()
   const { data } = await supabase
     .from('vt_lessons')
-    .select('id, title, slug, description, difficulty, status, video_id')
+    .select('id, title, slug, description, difficulty, level, status, video_id')
     .eq('id', id)
     .maybeSingle()
   if (!data) return null
@@ -56,6 +59,7 @@ export async function getLessonForAdminById(
     slug: data.slug,
     description: data.description,
     difficulty: data.difficulty,
+    level: data.level,
     status: data.status,
     videoId: data.video_id
   }
@@ -65,7 +69,7 @@ export async function getLessonsForAdmin(): Promise<(LessonCard & { status: stri
   const supabase = await createClient()
   const { data } = await supabase
     .from('vt_lessons')
-    .select('id, title, slug, description, difficulty, status')
+    .select('id, title, slug, description, difficulty, level, status')
     .order('created_at', { ascending: false })
   return data ?? []
 }
@@ -88,7 +92,7 @@ export async function getLessonBySlug(slug: string): Promise<LessonDetail | null
   const supabase = await createClient()
   const { data: lesson } = await supabase
     .from('vt_lessons')
-    .select('id, title, slug, description, difficulty, video_id')
+    .select('id, title, slug, description, difficulty, level, video_id')
     .eq('slug', slug)
     .maybeSingle()
   if (!lesson) return null
@@ -109,6 +113,7 @@ export async function getLessonBySlug(slug: string): Promise<LessonDetail | null
     slug: lesson.slug,
     description: lesson.description,
     difficulty: lesson.difficulty,
+    level: lesson.level,
     video,
     chapters: (chapters ?? []).map((c) => ({
       id: c.id,
